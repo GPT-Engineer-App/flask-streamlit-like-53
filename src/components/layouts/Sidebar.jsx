@@ -8,7 +8,7 @@ const Sidebar = () => {
     <Box width={{ base: "full", md: "250px" }} bg="gray.200" height="full" padding={4}>
       <VStack align="start" spacing={4}>
         <IconButton aria-label="Menu" icon={<FaHome />} size="lg" variant="ghost" isRound />
-        <Heading size="md">Object Detection App</Heading>
+        <Heading size="md">Live Stream App</Heading>
         <Button as={Link} to="/" leftIcon={<FaHome />} variant="solid">
           Home
         </Button>

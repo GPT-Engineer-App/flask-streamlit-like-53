@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Box, Button, Flex, Heading, Input, Stack, Text, VStack, useColorModeValue, IconButton, Divider, Radio, RadioGroup } from "@chakra-ui/react";
 import { FaSun, FaMoon, FaBars, FaVideo, FaStop } from "react-icons/fa";
 
@@ -8,6 +8,7 @@ const Index = () => {
   const [communicationMethod, setCommunicationMethod] = useState("WebSockets");
   const [isStreaming, setIsStreaming] = useState(false);
   const [detectedObjects, setDetectedObjects] = useState([]);
+  const videoRef = useRef(null);
 
   useEffect(() => {
     let eventSource;
@@ -39,15 +40,26 @@ const Index = () => {
     };
   }, [isStreaming, communicationMethod]);
 
-  const handleStartStream = () => {
+  const handleStartStream = async () => {
     setIsStreaming(true);
-    // Add logic to start video feed and object detection
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (error) {
+      console.error("Error accessing camera: ", error);
+    }
   };
 
   const handleStopStream = () => {
     setIsStreaming(false);
     setDetectedObjects([]);
-    // Add logic to stop video feed and object detection
+    if (videoRef.current && videoRef.current.srcObject) {
+      const tracks = videoRef.current.srcObject.getTracks();
+      tracks.forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+    }
   };
 
   return (
@@ -75,7 +87,9 @@ const Index = () => {
         </Flex>
         <Box mt={4} borderWidth="1px" borderRadius="lg" overflow="hidden" p={4}>
           <Text fontSize="lg" mb={2}>Video Feed:</Text>
-          <Box bg="black" height="300px" mb={4}></Box>
+          <Box bg="black" height="300px" mb={4}>
+            <video ref={videoRef} autoPlay style={{ width: "100%", height: "100%" }}></video>
+          </Box>
           <Text fontSize="lg" mb={2}>Detected Objects:</Text>
           <Box bg="gray.200" p={4} borderRadius="md" height="150px" overflowY="auto">
             {detectedObjects.length > 0 ? (
