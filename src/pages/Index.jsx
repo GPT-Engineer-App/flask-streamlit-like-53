@@ -6,6 +6,7 @@ const Index = () => {
   const bg = useColorModeValue("gray.100", "gray.800");
   const color = useColorModeValue("black", "white");
   const [communicationMethod, setCommunicationMethod] = useState("WebSockets");
+  const [detectionMethod, setDetectionMethod] = useState("YOLOv5");
   const [isStreaming, setIsStreaming] = useState(false);
   const [detectedObjects, setDetectedObjects] = useState([]);
   const videoRef = useRef(null);
@@ -16,13 +17,13 @@ const Index = () => {
 
     if (isStreaming) {
       if (communicationMethod === "SSE") {
-        eventSource = new EventSource("https://www.codehooks.io/your-sse-endpoint");
+        eventSource = new EventSource(`https://www.codehooks.io/your-sse-endpoint?detectionMethod=${detectionMethod}`);
         eventSource.onmessage = (event) => {
           const data = JSON.parse(event.data);
           setDetectedObjects(data.objects);
         };
       } else if (communicationMethod === "WebSockets") {
-        socket = new WebSocket("wss://www.codehooks.io/your-websocket-endpoint");
+        socket = new WebSocket(`wss://www.codehooks.io/your-websocket-endpoint?detectionMethod=${detectionMethod}`);
         socket.onmessage = (event) => {
           const data = JSON.parse(event.data);
           setDetectedObjects(data.objects);
@@ -38,7 +39,7 @@ const Index = () => {
         socket.close();
       }
     };
-  }, [isStreaming, communicationMethod]);
+  }, [isStreaming, communicationMethod, detectionMethod]);
 
   const handleStartStream = async () => {
     setIsStreaming(true);
@@ -75,6 +76,14 @@ const Index = () => {
           <Stack direction="row">
             <Radio value="WebSockets">WebSockets</Radio>
             <Radio value="SSE">Server-Sent Events (SSE)</Radio>
+          </Stack>
+        </RadioGroup>
+        <Text fontSize="xl">Select Detection Method:</Text>
+        <RadioGroup onChange={setDetectionMethod} value={detectionMethod}>
+          <Stack direction="row">
+            <Radio value="YOLOv5">YOLOv5</Radio>
+            <Radio value="SSD">SSD</Radio>
+            <Radio value="Faster R-CNN">Faster R-CNN</Radio>
           </Stack>
         </RadioGroup>
         <Flex justifyContent="space-between" alignItems="center" mt={4}>
