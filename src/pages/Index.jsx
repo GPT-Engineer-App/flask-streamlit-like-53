@@ -121,8 +121,13 @@ const Index = () => {
       // Perform detection on the preprocessed frame
       const predictions = await modelRef.current.detect(preprocessedFrame);
 
-      setDetectedObjects(predictions.map(pred => pred.class));
-      setRawDetections(predictions);
+      // Filter predictions to include only the specified objects
+      const filteredPredictions = predictions.filter(pred => 
+        ["aluminum can", "HDPE2 plastic bottle", "PET1 plastic bottle", "glass bottle", "milk carton"].includes(pred.class)
+      );
+
+      setDetectedObjects(filteredPredictions.map(pred => pred.class));
+      setRawDetections(filteredPredictions);
 
       requestAnimationFrame(() => detectFrame(video));
     }
