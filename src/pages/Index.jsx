@@ -3,6 +3,7 @@ import { Box, Button, Flex, Heading, Input, Stack, Text, VStack, useColorModeVal
 import { FaSun, FaMoon, FaBars, FaVideo, FaStop } from "react-icons/fa";
 import * as tf from '@tensorflow/tfjs';
 import * as yolo from '@tensorflow-models/coco-ssd';
+import * as ssd from '@tensorflow-models/coco-ssd';
 
 const Index = () => {
   const bg = useColorModeValue("gray.100", "gray.800");
@@ -18,7 +19,12 @@ const Index = () => {
   useEffect(() => {
     const loadModel = async () => {
       try {
-        const model = await yolo.load();
+        let model;
+        if (detectionMethod === "YOLOv5") {
+          model = await yolo.load();
+        } else if (detectionMethod === "SSD") {
+          model = await ssd.load();
+        }
         modelRef.current = model;
         console.log("Model loaded successfully");
       } catch (error) {
@@ -27,7 +33,7 @@ const Index = () => {
     };
 
     loadModel();
-  }, []);
+  }, [detectionMethod]);
 
   useEffect(() => {
     let eventSource;
