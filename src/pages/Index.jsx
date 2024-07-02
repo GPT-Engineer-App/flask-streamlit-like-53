@@ -4,6 +4,7 @@ import { FaSun, FaMoon, FaBars, FaVideo, FaStop } from "react-icons/fa";
 import * as tf from '@tensorflow/tfjs';
 import * as yolo from '@tensorflow-models/coco-ssd';
 import * as ssd from '@tensorflow-models/coco-ssd';
+import { tensor, div, sub, expandDims, image } from '@tensorflow/tfjs';
 
 const Index = () => {
   const bg = useColorModeValue("gray.100", "gray.800");
@@ -91,11 +92,38 @@ const Index = () => {
     }
   };
 
+  const preprocessFrame = (frame) => {
+    // Convert the frame to a tensor
+    let tensorFrame = tensor(frame);
+
+    // Normalize the image to have values between 0 and 1
+    tensorFrame = div(tensorFrame, 255.0);
+
+    // Resize the image to the required input size for the model
+    tensorFrame = image.resizeBilinear(tensorFrame, [640, 640]);
+
+    // TODO: Add noise reduction techniques if necessary
+
+    // Expand dimensions to match the model input
+    tensorFrame = expandDims(tensorFrame, 0);
+
+    return tensorFrame;
+  };
+
   const detectFrame = async (video) => {
     if (modelRef.current && isStreaming) {
-      const predictions = await modelRef.current.detect(video);
+      // Capture the current frame from the video
+      const frame = tf.browser.fromPixels(video);
+
+      // Preprocess the frame
+      const preprocessedFrame = preprocessFrame(frame);
+
+      // Perform detection on the preprocessed frame
+      const predictions = await modelRef.current.detect(preprocessedFrame);
+
       setDetectedObjects(predictions.map(pred => pred.class));
       setRawDetections(predictions);
+
       requestAnimationFrame(() => detectFrame(video));
     }
   };
