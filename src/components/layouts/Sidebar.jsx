@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Button, VStack, Heading, IconButton } from "@chakra-ui/react";
+import { Box, Button, VStack, Heading, IconButton, Flex } from "@chakra-ui/react";
 import { FaHome, FaCog, FaVideo } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
