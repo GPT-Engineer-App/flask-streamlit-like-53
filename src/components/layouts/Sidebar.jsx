@@ -8,7 +8,7 @@ const Sidebar = () => {
     <Box width={{ base: "full", md: "250px" }} bg="gray.200" height="full" padding={4}>
       <VStack align="start" spacing={4}>
         <IconButton aria-label="Menu" icon={<FaBullseye />} size="lg" variant="ghost" isRound />
-        <Heading size="md">Object Detection App</Heading>
+        <Heading size="md">Vision AI Dashboard</Heading>
         <Button as={Link} to="/" leftIcon={<FaHome />} variant="solid">
           Home
         </Button>
@@ -30,7 +30,7 @@ const SidebarLayout = ({ children }) => {
   return (
     <Flex minHeight="100vh" direction={{ base: "column", md: "row" }}>
       <Sidebar />
-      <main className="main-content object-detection-main" style={{ flex: 1, padding: "20px", backgroundColor: "#f0f0f0" }}>
+      <main className="main-content vision-ai-main" style={{ flex: 1, padding: "20px", backgroundColor: "#f0f0f0" }}>
         {children}
       </main>
     </Flex>
