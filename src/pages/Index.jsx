@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Box, Button, Flex, Heading, Input, Stack, Text, VStack, useColorModeValue, IconButton, Divider, Radio, RadioGroup } from "@chakra-ui/react";
-import { FaSun, FaMoon, FaBars, FaVideo, FaStop } from "react-icons/fa";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { Box, Button, Flex, Heading, Stack, Text, VStack, useColorModeValue, IconButton, Divider, Radio, RadioGroup } from "@chakra-ui/react";
+import { FaSun, FaMoon, FaVideo, FaStop } from "react-icons/fa";
 import * as tf from '@tensorflow/tfjs';
 import * as yolo from '@tensorflow-models/coco-ssd';
 import * as ssd from '@tensorflow-models/coco-ssd';
-import { tensor, div, sub, expandDims, image } from '@tensorflow/tfjs';
 
 const Index = () => {
   const bg = useColorModeValue("gray.100", "gray.800");
@@ -17,24 +16,24 @@ const Index = () => {
   const videoRef = useRef(null);
   const modelRef = useRef(null);
 
-  useEffect(() => {
-    const loadModel = async () => {
-      try {
-        let model;
-        if (detectionMethod === "YOLOv5") {
-          model = await yolo.load();
-        } else if (detectionMethod === "SSD") {
-          model = await ssd.load();
-        }
-        modelRef.current = model;
-        console.log("Model loaded successfully");
-      } catch (error) {
-        console.error("Error loading model: ", error);
+  const loadModel = useCallback(async () => {
+    try {
+      let model;
+      if (detectionMethod === "YOLOv5") {
+        model = await yolo.load();
+      } else if (detectionMethod === "SSD") {
+        model = await ssd.load();
       }
-    };
-
-    loadModel();
+      modelRef.current = model;
+      console.log("Model loaded successfully");
+    } catch (error) {
+      console.error("Error loading model: ", error);
+    }
   }, [detectionMethod]);
+
+  useEffect(() => {
+    loadModel();
+  }, [loadModel]);
 
   useEffect(() => {
     let eventSource;
@@ -93,35 +92,18 @@ const Index = () => {
   };
 
   const preprocessFrame = (frame) => {
-    // Convert the frame to a tensor
-    let tensorFrame = tensor(frame);
-
-    // Normalize the image to have values between 0 and 1
-    tensorFrame = div(tensorFrame, 255.0);
-
-    // Resize the image to the required input size for the model
-    tensorFrame = image.resizeBilinear(tensorFrame, [640, 640]);
-
-    // TODO: Add noise reduction techniques if necessary
-
-    // Expand dimensions to match the model input
-    tensorFrame = expandDims(tensorFrame, 0);
-
+    let tensorFrame = tf.browser.fromPixels(frame);
+    tensorFrame = tf.div(tensorFrame, 255.0);
+    tensorFrame = tf.image.resizeBilinear(tensorFrame, [640, 640]);
+    tensorFrame = tf.expandDims(tensorFrame, 0);
     return tensorFrame;
   };
 
   const detectFrame = async (video) => {
     if (modelRef.current && isStreaming) {
-      // Capture the current frame from the video
       const frame = tf.browser.fromPixels(video);
-
-      // Preprocess the frame
       const preprocessedFrame = preprocessFrame(frame);
-
-      // Perform detection on the preprocessed frame
       const predictions = await modelRef.current.detect(preprocessedFrame);
-
-      // Filter predictions to include only the specified objects
       const filteredPredictions = predictions.filter(pred => 
         ["aluminum can", "HDPE2 plastic bottle", "PET1 plastic bottle", "glass bottle", "milk carton"].includes(pred.class)
       );
@@ -153,7 +135,6 @@ const Index = () => {
           <Stack direction="row">
             <Radio value="YOLOv5">YOLOv5</Radio>
             <Radio value="SSD">SSD</Radio>
-            <Radio value="Faster R-CNN">Faster R-CNN</Radio>
           </Stack>
         </RadioGroup>
         <Flex justifyContent="space-between" alignItems="center" mt={4}>
