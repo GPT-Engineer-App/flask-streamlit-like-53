@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Box, Button, Flex, Heading, Input, Stack, Text, VStack, useColorModeValue, IconButton, Divider, Radio, RadioGroup } from "@chakra-ui/react";
 import { FaSun, FaMoon, FaBars, FaVideo, FaStop } from "react-icons/fa";
 
@@ -7,6 +7,37 @@ const Index = () => {
   const color = useColorModeValue("black", "white");
   const [communicationMethod, setCommunicationMethod] = useState("WebSockets");
   const [isStreaming, setIsStreaming] = useState(false);
+  const [detectedObjects, setDetectedObjects] = useState([]);
+
+  useEffect(() => {
+    let eventSource;
+    let socket;
+
+    if (isStreaming) {
+      if (communicationMethod === "SSE") {
+        eventSource = new EventSource("https://www.codehooks.io/your-sse-endpoint");
+        eventSource.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          setDetectedObjects(data.objects);
+        };
+      } else if (communicationMethod === "WebSockets") {
+        socket = new WebSocket("wss://www.codehooks.io/your-websocket-endpoint");
+        socket.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          setDetectedObjects(data.objects);
+        };
+      }
+    }
+
+    return () => {
+      if (eventSource) {
+        eventSource.close();
+      }
+      if (socket) {
+        socket.close();
+      }
+    };
+  }, [isStreaming, communicationMethod]);
 
   const handleStartStream = () => {
     setIsStreaming(true);
@@ -15,6 +46,7 @@ const Index = () => {
 
   const handleStopStream = () => {
     setIsStreaming(false);
+    setDetectedObjects([]);
     // Add logic to stop video feed and object detection
   };
 
@@ -46,7 +78,13 @@ const Index = () => {
           <Box bg="black" height="300px" mb={4}></Box>
           <Text fontSize="lg" mb={2}>Detected Objects:</Text>
           <Box bg="gray.200" p={4} borderRadius="md" height="150px" overflowY="auto">
-            <Text>No objects detected.</Text>
+            {detectedObjects.length > 0 ? (
+              detectedObjects.map((obj, index) => (
+                <Text key={index}>{obj}</Text>
+              ))
+            ) : (
+              <Text>No objects detected.</Text>
+            )}
           </Box>
         </Box>
       </Stack>
