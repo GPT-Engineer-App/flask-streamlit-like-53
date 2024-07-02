@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Box, Button, Flex, Heading, Input, Stack, Text, VStack, useColorModeValue, IconButton, Divider, Radio, RadioGroup } from "@chakra-ui/react";
 import { FaSun, FaMoon, FaBars, FaVideo, FaStop } from "react-icons/fa";
+import * as tf from '@tensorflow/tfjs';
+import * as yolo from '@tensorflow-models/coco-ssd';
 
 const Index = () => {
   const bg = useColorModeValue("gray.100", "gray.800");
@@ -9,7 +11,23 @@ const Index = () => {
   const [detectionMethod, setDetectionMethod] = useState("YOLOv5");
   const [isStreaming, setIsStreaming] = useState(false);
   const [detectedObjects, setDetectedObjects] = useState([]);
+  const [rawDetections, setRawDetections] = useState([]);
   const videoRef = useRef(null);
+  const modelRef = useRef(null);
+
+  useEffect(() => {
+    const loadModel = async () => {
+      try {
+        const model = await yolo.load();
+        modelRef.current = model;
+        console.log("Model loaded successfully");
+      } catch (error) {
+        console.error("Error loading model: ", error);
+      }
+    };
+
+    loadModel();
+  }, []);
 
   useEffect(() => {
     let eventSource;
@@ -21,12 +39,14 @@ const Index = () => {
         eventSource.onmessage = (event) => {
           const data = JSON.parse(event.data);
           setDetectedObjects(data.objects);
+          setRawDetections(data.rawDetections);
         };
       } else if (communicationMethod === "WebSockets") {
         socket = new WebSocket(`wss://www.codehooks.io/your-websocket-endpoint?detectionMethod=${detectionMethod}`);
         socket.onmessage = (event) => {
           const data = JSON.parse(event.data);
           setDetectedObjects(data.objects);
+          setRawDetections(data.rawDetections);
         };
       }
     }
@@ -47,6 +67,7 @@ const Index = () => {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        detectFrame(videoRef.current);
       }
     } catch (error) {
       console.error("Error accessing camera: ", error);
@@ -56,10 +77,20 @@ const Index = () => {
   const handleStopStream = () => {
     setIsStreaming(false);
     setDetectedObjects([]);
+    setRawDetections([]);
     if (videoRef.current && videoRef.current.srcObject) {
       const tracks = videoRef.current.srcObject.getTracks();
       tracks.forEach(track => track.stop());
       videoRef.current.srcObject = null;
+    }
+  };
+
+  const detectFrame = async (video) => {
+    if (modelRef.current && isStreaming) {
+      const predictions = await modelRef.current.detect(video);
+      setDetectedObjects(predictions.map(pred => pred.class));
+      setRawDetections(predictions);
+      requestAnimationFrame(() => detectFrame(video));
     }
   };
 
@@ -107,6 +138,16 @@ const Index = () => {
               ))
             ) : (
               <Text>No objects detected.</Text>
+            )}
+          </Box>
+          <Text fontSize="lg" mb={2}>Raw Detection Results:</Text>
+          <Box bg="gray.200" p={4} borderRadius="md" height="150px" overflowY="auto">
+            {rawDetections.length > 0 ? (
+              rawDetections.map((detection, index) => (
+                <Text key={index}>{JSON.stringify(detection)}</Text>
+              ))
+            ) : (
+              <Text>No raw detections.</Text>
             )}
           </Box>
         </Box>
