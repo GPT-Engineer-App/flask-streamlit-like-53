@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, Button, VStack, Heading, IconButton, Flex } from "@chakra-ui/react";
-import { FaHome, FaCog, FaVideo, FaBullseye } from "react-icons/fa";
+import { FaHome, FaCog, FaVideo, FaBullseye, FaFileAlt } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
 const Sidebar = () => {
@@ -17,6 +17,9 @@ const Sidebar = () => {
         </Button>
         <Button as={Link} to="/live-stream" leftIcon={<FaVideo />} variant="solid">
           Live Stream
+        </Button>
+        <Button as={Link} to="/log-output" leftIcon={<FaFileAlt />} variant="solid">
+          Log Output
         </Button>
       </VStack>
     </Box>
