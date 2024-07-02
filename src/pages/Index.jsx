@@ -1,46 +1,56 @@
-import React from "react";
-import { Box, Button, Flex, Heading, Input, Stack, Text, VStack, useColorModeValue, IconButton, Divider } from "@chakra-ui/react";
-import { FaSun, FaMoon, FaBars } from "react-icons/fa";
+import React, { useState } from "react";
+import { Box, Button, Flex, Heading, Input, Stack, Text, VStack, useColorModeValue, IconButton, Divider, Radio, RadioGroup } from "@chakra-ui/react";
+import { FaSun, FaMoon, FaBars, FaVideo, FaStop } from "react-icons/fa";
 
 const Index = () => {
   const bg = useColorModeValue("gray.100", "gray.800");
   const color = useColorModeValue("black", "white");
+  const [communicationMethod, setCommunicationMethod] = useState("WebSockets");
+  const [isStreaming, setIsStreaming] = useState(false);
+
+  const handleStartStream = () => {
+    setIsStreaming(true);
+    // Add logic to start video feed and object detection
+  };
+
+  const handleStopStream = () => {
+    setIsStreaming(false);
+    // Add logic to stop video feed and object detection
+  };
 
   return (
-    <Flex minHeight="100vh" direction={{ base: "column", md: "row" }}>
-      {/* Sidebar */}
-      <Box width={{ base: "full", md: "250px" }} bg={useColorModeValue("gray.200", "gray.900")} height="full" padding={4}>
-        <VStack align="start" spacing={4}>
-          <IconButton aria-label="Menu" icon={<FaBars />} size="lg" variant="ghost" isRound />
-          <Heading size="md">Navigation</Heading>
-          <Button leftIcon={<FaSun />} variant="solid">
-            Dashboard
+    <Box flex="1" bg={bg} color={color} p={5}>
+      <Flex justifyContent="space-between" alignItems="center">
+        <Heading mb={4}>Live Stream</Heading>
+        <IconButton aria-label="Toggle theme" icon={useColorModeValue(<FaMoon />, <FaSun />)} onClick={() => console.log("Toggle theme")} isRound />
+      </Flex>
+      <Divider mb={4} />
+      <Stack spacing={4}>
+        <Text fontSize="xl">Select Communication Method:</Text>
+        <RadioGroup onChange={setCommunicationMethod} value={communicationMethod}>
+          <Stack direction="row">
+            <Radio value="WebSockets">WebSockets</Radio>
+            <Radio value="SSE">Server-Sent Events (SSE)</Radio>
+          </Stack>
+        </RadioGroup>
+        <Flex justifyContent="space-between" alignItems="center" mt={4}>
+          <Button leftIcon={<FaVideo />} colorScheme="green" onClick={handleStartStream} isDisabled={isStreaming}>
+            Start Live Stream
           </Button>
-          <Button leftIcon={<FaMoon />} variant="solid">
-            Reports
+          <Button leftIcon={<FaStop />} colorScheme="red" onClick={handleStopStream} isDisabled={!isStreaming}>
+            Stop Live Stream
           </Button>
-          <Button leftIcon={<FaBars />} variant="solid">
-            Settings
-          </Button>
-        </VStack>
-      </Box>
-
-      {/* Main Content */}
-      <Box flex="1" bg={bg} color={color} p={5}>
-        <Flex justifyContent="space-between" alignItems="center">
-          <Heading mb={4}>Dashboard</Heading>
-          <IconButton aria-label="Toggle theme" icon={useColorModeValue(<FaMoon />, <FaSun />)} onClick={() => console.log("Toggle theme")} isRound />
         </Flex>
-        <Divider mb={4} />
-        <Stack spacing={4}>
-          <Text fontSize="xl">Welcome to your dashboard!</Text>
-          <Input placeholder="Search..." size="lg" />
-          <Button rightIcon={<FaBars />} colorScheme="blue">
-            Submit
-          </Button>
-        </Stack>
-      </Box>
-    </Flex>
+        <Box mt={4} borderWidth="1px" borderRadius="lg" overflow="hidden" p={4}>
+          <Text fontSize="lg" mb={2}>Video Feed:</Text>
+          <Box bg="black" height="300px" mb={4}></Box>
+          <Text fontSize="lg" mb={2}>Detected Objects:</Text>
+          <Box bg="gray.200" p={4} borderRadius="md" height="150px" overflowY="auto">
+            <Text>No objects detected.</Text>
+          </Box>
+        </Box>
+      </Stack>
+    </Box>
   );
 };
 
